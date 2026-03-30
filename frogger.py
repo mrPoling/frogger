@@ -52,8 +52,8 @@ splatted = False
 crossed = False
 
 #Score Bonus settings
-ROW_BONUS = 50  #Awarded each time current frog reaches a higher row than yet visited (resets if life lost)
-#SAFELY_ACROSS_BONUS: ROW_BONUS * (#rows cubed)  #Awarded each time frog reaches the other side
+ROW_BONUS = 50  #Awarded when frog reaches a higher row than yet visited (per life)
+#Crossing Bonus: ROW_BONUS * (#rows cubed)  #Awarded each time frog reaches the other side
 LIVES_REMAINING_BONUS = 100 * MAXROWS         # Awarded per remaining life, at end of game
 NO_LOST_LIVES_BONUS = 200 * MAXROWS**2  # Awarded at end of game
 
@@ -61,7 +61,8 @@ TURTLE_COLORS = ["red", "orange", "yellow", "green", "blue", "purple", "white", 
 TURTLE_SHAPES = ["turtle"] * 8
 
 # Load car shapes
-CAR_SHAPES_LEFT = ["car/blue.gif","car/brown.gif","car/purple.gif","car/gray.gif","car/green.gif","car/red.gif","car/teal.gif","car/white.gif"]
+CAR_SHAPES_LEFT = ["car/blue.gif","car/brown.gif","car/purple.gif","car/gray.gif",
+                   "car/green.gif","car/red.gif","car/teal.gif","car/white.gif"]
 CAR_SHAPES_RIGHT = []
 for car in CAR_SHAPES_LEFT: 
     rightCarFilename = car.replace(".gif","_R.gif")
@@ -81,7 +82,7 @@ def get_highscores():
     except FileNotFoundError:
         print(f"Error: The file '{highscores_filepath}' was not found.")
     except PermissionError:
-        print(f"Error: You do not have permission to read the file '{highscores_filepath}'.")
+        print(f"Error: Insufficient permission to read the file '{highscores_filepath}'.")
               
 def store_highscore():
     scores = get_highscores()
@@ -147,15 +148,16 @@ def handle_collision(turtle):
     If collision, briefly change frogger to splatted image
     """
     global lives, splatted
-    if (abs(turtle.xcor() - frogger.xcor()) < 20) and (abs(turtle.ycor() - frogger.ycor()) < 20):
-        splatted = True
-        frogger.shape(SPLATTED_FROGGER_SHAPE)
-        screen.update()
-        time.sleep(1)
-        lives -= 1
-        scoring()
-        reset_frogger()
-        time.sleep(0.5) #allow any lingering on_key event listeners to complete
+    if (abs(turtle.xcor() - frogger.xcor()) < 20):
+        if(abs(turtle.ycor() - frogger.ycor()) < 20):
+            splatted = True
+            frogger.shape(SPLATTED_FROGGER_SHAPE)
+            screen.update()
+            time.sleep(1)
+            lives -= 1
+            scoring()
+            reset_frogger()
+            time.sleep(0.5) #allow any lingering on_key event listeners to complete
 
 def wrap_around(turtle, direction):
     """
@@ -176,7 +178,7 @@ def move_turtles(turts, direction=RIGHT, steps=2, interval=20):
     Move each turtl in the provided list (row) forward the specified steps
     Also call collision-handling method
     """
-    if gameover: return   #This hack is the only way I could determine to properly "freeze" the game when done
+    if gameover: return   #This hack is to "freeze" the game when done
 
     for t in turts:
         t.forward(steps)  
@@ -184,7 +186,7 @@ def move_turtles(turts, direction=RIGHT, steps=2, interval=20):
         handle_collision(t)
     screen.update() 
 
-    #Keep the turtle row running by moving each again, by calling this function again after frequency sec
+    #Keep the turtle row moving by calling this function again after 'interval' seconds
     screen.ontimer(lambda: move_turtles(turts, direction, steps), interval)        
 
 def load_traffic_row(rownum, direction, shapes, colors, spacing=DEFAULT_SPACING):
@@ -217,7 +219,9 @@ def activaterows(numberofrows):
         move_turtles(all_turtles[row], direction, row + 1)
 
 def hop_leftright(hops):
-    if gameover or splatted or crossed: return  #Hacky solution to prevent further Frogger movement (and scoring!) at game end
+    #Hacky solution to prevent further Frogger movement (and scoring!) at game end
+    if gameover or splatted or crossed: return  
+    
     SIDE_HOP = 20
     if (hops) < 0:
         frogger.shape(FROGGER_LEFT)
@@ -229,7 +233,9 @@ def hop_leftright(hops):
         frogger.setx(newX)
 
 def hop_updown(hops):
-    if gameover or splatted or crossed: return  #Hacky solution to prevent further Frogger movement (and scoring!) at game end
+    #Hacky solution to prevent further Frogger movement (and scoring!) at game end:
+    if gameover or splatted or crossed: return
+      
     global highest_reached, score
     VERTICAL_HOP = ROWHEIGHT #fixed, to keep Frogger centered vertically on row
     height = frogger.ycor()
@@ -244,7 +250,8 @@ def hop_updown(hops):
 
     newheight = height + VERTICAL_HOP * hops
     maxvertical = ROWHEIGHT * (len(all_turtles) + 1) + FROGGER_STARTING_HEIGHT
-    if newheight >= FROGGER_STARTING_HEIGHT and newheight <= maxvertical:  #Keep Frogger in-bounds
+    
+    if newheight >= FROGGER_STARTING_HEIGHT and newheight <= maxvertical: #Keep in-bounds: 
         frogger.sety(newheight)
         if newheight == maxvertical and lives > 0:  #Frogger made it through!
             successful_crossing()
@@ -297,7 +304,7 @@ def play_again_prompt():
 def successful_crossing():
     """
     Message and scoring for successful crossing, plus adding another row of traffic
-    Unless MAXROWS is reached, then display end-of-game message, scoring, and play-again option
+    Unless MAXROWS is reached: Display end-of-game message, scoring, play-again option
     """
     global gameover, score, crossed
     crossed = True
@@ -306,7 +313,8 @@ def successful_crossing():
     writer.goto(-50, TOP - 100)
     writer.pendown()
     bonus = ROW_BONUS * len(all_turtles)**3
-    writer.write(f"Congrats, you survived! \nBonus: {bonus}\n", align="left", font=("Arial", 18, "bold"))
+    crossed_msg = f"Congrats, you survived! \nBonus: {bonus}\n"
+    writer.write(crossed_msg, align="left", font=("Arial", 18, "bold"))
     score += bonus
     
     # Add a lane (unless game already complete)
@@ -343,7 +351,8 @@ def successful_crossing():
         play_again_prompt()
 
 
-# Set highscore using value from file, based on current MAXROWS value. Fails if that row in file isn't an integer        
+# Set highscore using value from file, based on current MAXROWS value. 
+# Fails if that row in file isn't an integer        
 highscore = int(get_highscores()[MAXROWS].strip()) 
 
 screen.onkey(lambda: hop_leftright(-1), "Left")
