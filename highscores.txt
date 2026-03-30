@@ -1,0 +1,9 @@
+# High scores, where row # corresponds to the MAXROWS settings for that game (0-indexed: this is row 0).  Assumes LIVES=5
+0
+2400
+5400
+10800
+19000
+25750
+0
+0

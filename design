@@ -1,0 +1,27 @@
+Design
+X    * multiple rows of horiz. moving lines of "turtles", each row different shape, with gaps in between for frogger to pass
+X    * user moves frogger around (up,down,L, R)
+X    * frogger dies, respawns at bottom, if collides with moving turtle
+X    * lose if run out of lives
+X    * Win if makes it to top row (no turtles there)
+X    * display of score, lives left  (score incremented when Frogger reaches another row)
+
+
+Iterations:
+X    1) moving line of turtles, continously scrolling across screen
+X    2) 2nd moving line (opposite dir)
+X    3) Frogger, movable in 4 directions using keyboard
+X    4) Collision detection
+X    6) Reset, lost life, upon collision  
+X    7) Game Over Screen if dies too many times
+X    8) add safe row at top, and Win screen
+
+
+Enhancements:
+X    * several more rows
+X    * Better Frogger gif that actually looks like frog, turns left/right
+X    * Different types of traffic besides just turtles
+    * inverted row: landing on turtle is OK, inbetween is fail
+        ** if land on turtle, Frogger moves with it
+    * allow import of gif filenames to be used for traffic vehicles
+
