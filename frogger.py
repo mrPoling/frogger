@@ -2,18 +2,18 @@ import turtle as trtl
 import time
 
 
+#NOTE Difficulty of completing all rounds is primarily controlled by these 4 variables: 
+STARTINGROWS = 2
+MAXROWS = 5  #Don't set lower than STARTINGROWS
+DEFAULT_SPACING = 100  #between turtles/cars
+LIVES = 5
+
 SCREEN_WIDTH = 750
 SCREEN_HEIGHT = 400
 TOP = SCREEN_HEIGHT / 2
 BOTTOM = -SCREEN_HEIGHT / 2
 LEFTSIDE = -SCREEN_WIDTH / 2
 RIGHTSIDE = SCREEN_WIDTH / 2
-
-STARTINGROWS = 2
-#NOTE Difficulty of completing all rounds is primarily controlled by these 3 variables: 
-MAXROWS = 5  #Don't set lower than STARTINGROWS
-LIVES = 5
-DEFAULT_SPACING = 100  
 
 ROWHEIGHT = 40 
 RIGHT = 0
@@ -49,6 +49,7 @@ lives = LIVES
 highest_reached = BOTTOM
 gameover = False
 splatted = False
+crossed = False
 
 #Score Bonus settings
 ROW_BONUS = 50  #Awarded each time current frog reaches a higher row than yet visited (resets if life lost)
@@ -113,13 +114,14 @@ def reset_game():
     display_scoring_info()
 
 def reset_frogger():
-    global highest_reached, splatted
+    global highest_reached, splatted, crossed
     frogger.penup()
     frogger.shape(FROGGER_UP)
     frogger.goto(0, FROGGER_STARTING_HEIGHT)
     highest_reached = BOTTOM
     frogger.pendown()
     splatted = False
+    crossed = False
     screen.update()
 
 def display_scoring_info():
@@ -215,7 +217,7 @@ def activaterows(numberofrows):
         move_turtles(all_turtles[row], direction, row + 1)
 
 def hop_leftright(hops):
-    if gameover or splatted: return  #Hacky solution to prevent further Frogger movement (and scoring!) at game end
+    if gameover or splatted or crossed: return  #Hacky solution to prevent further Frogger movement (and scoring!) at game end
     SIDE_HOP = 20
     if (hops) < 0:
         frogger.shape(FROGGER_LEFT)
@@ -227,7 +229,7 @@ def hop_leftright(hops):
         frogger.setx(newX)
 
 def hop_updown(hops):
-    if gameover or splatted: return  #Hacky solution to prevent further Frogger movement (and scoring!) at game end
+    if gameover or splatted or crossed: return  #Hacky solution to prevent further Frogger movement (and scoring!) at game end
     global highest_reached, score
     VERTICAL_HOP = ROWHEIGHT #fixed, to keep Frogger centered vertically on row
     height = frogger.ycor()
@@ -297,7 +299,8 @@ def successful_crossing():
     Message and scoring for successful crossing, plus adding another row of traffic
     Unless MAXROWS is reached, then display end-of-game message, scoring, and play-again option
     """
-    global gameover, score
+    global gameover, score, crossed
+    crossed = True
     writer.color("green")
     writer.penup()
     writer.goto(-50, TOP - 100)
@@ -310,7 +313,7 @@ def successful_crossing():
     if len(all_turtles) < MAXROWS:
         writer.write("\n\n\nLet's add a lane!", align="left", font=("Arial", 18, "bold"))
         screen.update()
-        time.sleep(1)
+        time.sleep(2)
         scoring()
         reset_frogger()
         activaterows(1)
